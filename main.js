@@ -4,7 +4,7 @@ const ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-const writeTheName = "SAMIRAN";
+const writeTheName = "SAMIR";
 const textFont = 10;
 
 let particleArray = [];
