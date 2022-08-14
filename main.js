@@ -4,13 +4,18 @@ const ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
+const writeTheName = "SAMIRAN";
+const textFont = 10;
+
 let particleArray = [];
+let adjustX = 2;
+let adjustY = -6;
 
 //mouse handle
 const mouse = {
     x: null,
     y: null,
-    radius: 150,
+    radius: 120,
 }
 
 window.addEventListener("mousemove", (event)=>{
@@ -20,8 +25,10 @@ window.addEventListener("mousemove", (event)=>{
 
 ctx.fillStyle = "white";
 ctx.font = "30px verdana";
-ctx.fillText("A", 0, 50);
-const data = ctx.getImageData(0,0,100,100)
+ctx.fillText(writeTheName, 0, 50);
+const textCordinates = ctx.getImageData(0,0,500,100)
+
+
 
 
 //particle creation class
@@ -32,7 +39,7 @@ class Perticle {
         this.radius = 3;
         this.baseX = this.x;
         this.baseY = this.y;
-        this.density = (Math.random() * 30) + 1
+        this.density = (Math.random() * 8) + 1
     }
     draw(){
         ctx.fillStyle = "red";
@@ -45,11 +52,24 @@ class Perticle {
         let dx = mouse.x - this.x;
         let dy = mouse.y - this.y;
         let distance = Math.sqrt(dx * dx + dy * dy);
-
-        if(distance < 100){
-            this.radius = 10;
+        let forceDirectionX = dx / distance;
+        let forceDirectionY = dy / distance;
+        let maxDistance = mouse.radius;
+        let force = (maxDistance - distance) / maxDistance;
+        let directionX = forceDirectionX * force * this.density;
+        let directionY = forceDirectionY * force * this.density;
+        if(distance < maxDistance){
+            this.x -= directionX;
+            this.y -= directionY;
         }else {
-            this.radius = 3;
+            if(this.x != this.baseX) {
+                let dx = this.x - this.baseX;
+                this.x -= dx/10;
+            }
+            if(this.y != this.beseY) {
+                let dy = this.y - this.baseY;
+                this.y -= dy/10;
+            }
         }
     }
 }
@@ -57,10 +77,18 @@ class Perticle {
 //position of the peritcle
 function init() {
     particleArray = [];
-    for(i=0;i<1000;i++){
-        let x = Math.random() * canvas.width;
-        let y = Math.random() * canvas.height;
-        particleArray.push(new Perticle(x,y))
+    for(y = 0, y2 = textCordinates.height; y < y2; y++){
+        for(x = 0, x2 = textCordinates.width; x < x2; x++){
+            if(textCordinates.data[(y * 4 * textCordinates.width) + 
+            (x * 4) + 3] > 128){
+                let positonX = x + adjustX;
+                let positionY = y + adjustY;
+                particleArray.push(new Perticle(
+                    positonX * textFont, 
+                    positionY * textFont
+                    ));
+            }
+        }
     }
 } 
 init();
@@ -72,6 +100,30 @@ function animate() {
         particleArray[i].draw();
         particleArray[i].update();
     }
+cunnect();
+
     requestAnimationFrame(animate);
 }
 animate();
+
+
+// make line between two points
+function cunnect() {
+    for(a = 0; a < particleArray.length; a++){
+        for(b = a; b < particleArray.length; b++){
+            let dx = particleArray[a].x - particleArray[b].x;
+            let dy = particleArray[a].y - particleArray[b].y;
+            let distance = Math.sqrt(dx * dx + dy * dy);
+
+            if(distance < 30){
+                let oposity = 1 - (distance/30);
+                ctx.strokeStyle = `rgba(255,0,0,${oposity})`;
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(particleArray[a].x,particleArray[a].y);
+                ctx.lineTo(particleArray[b].x,particleArray[b].y);
+                ctx.stroke();
+            }
+        }
+    }
+}
